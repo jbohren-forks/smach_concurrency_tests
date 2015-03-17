@@ -4,6 +4,10 @@ import rospy
 import smach
 import smach_ros
 from time import sleep
+import threading
+
+from multiprocessing.pool import ThreadPool
+
 
 class Work(smach.State):
     def __init__(self):
@@ -11,7 +15,7 @@ class Work(smach.State):
 
     def execute(self, userdata):
         print 'Executing work'
-        while True:
+        while not smach.is_shutdown():
             if self.preempt_requested():
                 print "work preempted"
                 self.service_preempt()
@@ -53,13 +57,19 @@ def main():
     sis.start()
 
     # Execute SMACH plan
-    outcome = sm.execute()
+    pool = ThreadPool(processes=1)
+
+    async_result = pool.apply_async(sm.execute)
     
     # Construct action server wrapper
 #    asw = smach_ros.ActionServerWrapper( 'state_machine2', actionlib_tutorials.msg.AveragingAction, wrapped_container=sm, succeeded_outcomes=['outcome4'], goal_key='goal' )
 #    asw.run_server()
   
     rospy.spin()
+    outcome = async_result.get()
+
+    print('outcome: '+outcome)
+
     sis.stop()
 
 if __name__ == '__main__':
