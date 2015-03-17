@@ -3,19 +3,21 @@
 import rospy
 import smach
 import smach_ros
+from time import sleep
 
 class Work(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['work_succeeded', 'work_failed', 'work_preempted'])
 
     def execute(self, userdata):
-        rospy.loginfo('Executing work')
+        print 'Executing work'
         while True:
             if self.preempt_requested():
                 print "work preempted"
                 self.service_preempt()
                 return 'work_preempted'
-            rospy.sleep(1)
+            
+            sleep(1)
         return 'work_succeeded'
 
 def main():
